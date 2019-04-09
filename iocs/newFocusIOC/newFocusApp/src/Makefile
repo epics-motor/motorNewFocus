@@ -5,6 +5,9 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
+# The following are used for debugging messages.
+#!USR_CXXFLAGS += -DDEBUG
+
 #=============================
 # Build the IOC application
 
@@ -16,10 +19,21 @@ DBD += newFocus.dbd
 newFocus_DBD += base.dbd
 
 # Include dbd files from all support applications:
-#newFocus_DBD += xxx.dbd
+#ifdef ASYN
+newFocus_DBD += asyn.dbd
+#endif
+newFocus_DBD += motorSupport.dbd
+newFocus_DBD += devNewFocus.dbd
 
 # Add all the support libraries needed by this IOC
-#newFocus_LIBS += xxx
+newFocus_LIBS += newFocus
+newFocus_LIBS += motor
+#ifdef ASYN
+newFocus_LIBS += asyn
+#endif
+#ifdef SNCSEQ
+newFocus_LIBS += seq pv
+#endif
 
 # newFocus_registerRecordDeviceDriver.cpp derives from newFocus.dbd
 newFocus_SRCS += newFocus_registerRecordDeviceDriver.cpp

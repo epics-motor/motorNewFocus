@@ -1,0 +1,4 @@
+MOTOR=
+-include $(MOTOR)/configure/RELEASE
+# path to motorNewFocus is needed to build the IOC inside motorNewFocus, but outside motor
+MOTOR_NEWFOCUS=
