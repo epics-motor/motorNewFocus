@@ -21,12 +21,14 @@ newFocus_DBD += base.dbd
 # Include dbd files from all support applications:
 #ifdef ASYN
 newFocus_DBD += asyn.dbd
+newFocus_DBD += drvAsynSerialPort.dbd
+newFocus_DBD += drvAsynIPPort.dbd
 #endif
 newFocus_DBD += motorSupport.dbd
 newFocus_DBD += devNewFocus.dbd
 
 # Add all the support libraries needed by this IOC
-newFocus_LIBS += newFocus
+newFocus_LIBS += NewFocus
 newFocus_LIBS += motor
 #ifdef ASYN
 newFocus_LIBS += asyn

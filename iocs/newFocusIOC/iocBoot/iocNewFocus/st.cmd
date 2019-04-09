@@ -1,8 +1,5 @@
 #!../../bin/linux-x86_64/newFocus
 
-## You may have to change newFocus to something else
-## everywhere it appears in this file
-
 < envPaths
 
 cd "${TOP}"
@@ -11,11 +8,17 @@ cd "${TOP}"
 dbLoadDatabase "dbd/newFocus.dbd"
 newFocus_registerRecordDeviceDriver pdbbase
 
-## Load record instances
-#dbLoadRecords("db/xxx.db","user=kpetersn")
-
 cd "${TOP}/iocBoot/${IOC}"
+
+## motorUtil (allstop & alldone)
+dbLoadRecords("$(MOTOR)/db/motorUtil.db", "P=newFocus:")
+
+##
+< PMNC87xx.cmd
+
 iocInit
 
-## Start any sequence programs
-#seq sncxxx,"user=kpetersn"
+## motorUtil (allstop & alldone)
+motorUtilInit("newFocus:")
+
+# Boot complete
