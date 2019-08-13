@@ -8,10 +8,15 @@ March 28, 2011
 
 == Modifications ==
 2015-12-01 - Wayne Lewis - Modify for NewFocus 874x controllers
+2019-08-09 - Christopher Artates - Expanding closed-loop support for 8743-CL and updated poll method
 */
 
 #include "asynMotorController.h"
 #include "asynMotorAxis.h"
+
+#define motorUpdateIntervalString   "MOTOR_UPDATE_INTERVAL"
+#define motorDeadbandString         "MOTOR_DEADBAND"
+#define motorFollowingErrorString   "MOTOR_FOLLOWING_ERROR"
 
 class epicsShareClass nf874xAxis : public asynMotorAxis
 {
@@ -25,13 +30,32 @@ public:
   asynStatus stop(double acceleration);
   asynStatus poll(bool *moving);
   asynStatus setPosition(double position);
+  asynStatus setEncoderPosition(double position);
+  asynStatus setClosedLoop(bool closedLoop);
+  asynStatus doMoveToHome();
+  asynStatus setHighLimit(double highLimit);
+  asynStatus setLowLimit(double lowLimit);
+
+  /* Methods not in base asynMotorAxis class */
+  asynStatus setUpdateInterval(double interval);
+  asynStatus setDeadband(int deadband);
+  asynStatus setFollowingError(int threshold);
 
 private:
-  nf874xController *pC_;      /**< Pointer to the asynMotorController to which this axis belongs.
-                                *   Abbreviated because it is used very frequently */
-  char axisName_[10];      /**< Name of each axis, used in commands to nf874x controller */ 
-  double encoderPosition_; /**< Cached copy of the encoder position */ 
-  
+  nf874xController *pC_;        /**< Pointer to the asynMotorController to which this axis belongs.
+                                  *   Abbreviated because it is used very frequently */
+  char   axisName_[10];         /**< Name of each axis, used in commands to nf874x controller */
+  int    lastDirection_;        /**< Last direction of motion (0 == neg, 1 == pos) */
+  double encoderPosition_;      /**< Cached copy of the encoder position */
+
+  // Members specific for closed-loop support
+  int    limitChecking_;        /**< Flag if hard travel limit checking is enabled */
+  double highLimit_;            /**< Value of positive direction hardware limit set */
+  double lowLimit_;             /**< Value of negative direction hardware limit set */
+  double updateInterval_;       /**< Time in seconds of closed-loop update interval */
+  double deadband_;             /**< Positioning range for avoiding limit cycling */
+  double followingError_;       /**< Maximum allowed tracking error threshold */ 
+
 friend class nf874xController;
 };
 
@@ -45,6 +69,16 @@ public:
   void report(FILE *fp, int level);
   nf874xAxis* getAxis(asynUser *pasynUser);
   nf874xAxis* getAxis(int axisNo);
+  
+protected:
+  char modelName_[10];        /**< Model name of controller, for default open/closed-loop control config */
+
+  /** Index numbers for closed-loop specific parameters */
+  int motorUpdateInterval_;
+  int motorDeadband_;
+  int motorFollowingError_;
+
+  int hasClosedLoopSupport_;  /**< Flag indicating if controller supports closed-loop functionality */
 
 friend class nf874xAxis;
 };
