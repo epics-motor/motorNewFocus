@@ -1,5 +1,21 @@
 # motorNewFocus Releases
 
+## __R1-1-1 (2020-05-12)__
+R1-1-1 is a release based on the master branch.  
+
+### Changes since R1-1
+
+#### New features
+* None
+
+#### Modifications to existing features
+* None
+
+#### Bug fixes
+* Commit [0000255](https://github.com/epics-motor/motorNewFocus/commit/0000255ab0a98ba2f57c4b485cddc661500815fc): Include ``$(MOTOR)/modules/RELEASE.$(EPICS_HOST_ARCH).local`` instead of ``$(MOTOR)/configure/RELEASE``
+* Pull request [#2](https://github.com/epics-motor/motorNewFocus/pull/2): Eliminated compiler warnings
+* Pull request [#3](https://github.com/epics-motor/motorNewFocus/pull/3): [Kaz Gofron](https://github.com/kgofron) added documenation for supported 874x firmware versions
+
 ## __R1-1 (2019-08-13)__
 R1-1 is a release based on the master branch.  
 
