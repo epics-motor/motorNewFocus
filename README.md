@@ -1,7 +1,8 @@
 # motorNewFocus
 EPICS motor drivers for the following [New Focus](https://www.newport.com/b/new-focus) controllers: 8750, 8752, & 874x
 
-[![Build Status](https://travis-ci.org/epics-motor/motorNewFocus.png)](https://travis-ci.org/epics-motor/motorNewFocus)
+[![Build Status](https://github.com/epics-motor/motorNewFocus/actions/workflows/ci-scripts-build.yml/badge.svg)](https://github.com/epics-motor/motorNewFocus/actions/workflows/ci-scripts-build.yml)
+<!--[![Build Status](https://travis-ci.org/epics-motor/motorNewFocus.png)](https://travis-ci.org/epics-motor/motorNewFocus)-->
 
 motorNewFocus is a submodule of [motor](https://github.com/epics-modules/motor).  When motorNewFocus is built in the ``motor/modules`` directory, no manual configuration is needed.
 
