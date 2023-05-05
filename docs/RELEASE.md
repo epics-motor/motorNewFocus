@@ -1,5 +1,23 @@
 # motorNewFocus Releases
 
+## __R1-2 (2023-05-05)__
+R1-2 is a release based on the master branch.
+
+### Changes since R1-1-1
+
+#### New features
+* None
+
+#### Modifications to existing features
+* Pull request [#8](https://github.com/epics-motor/motorNewFocus/pull/8): Simplified the newfocus8742 example. Made it easier to copy to a different IOC.
+
+#### Bug fixes
+* None
+
+#### Continuous integration
+* Added ci-scripts (v3.0.1)
+* Switched from Travis CI to Github Actions
+
 ## __R1-1-1 (2020-05-12)__
 R1-1-1 is a release based on the master branch.  
 
