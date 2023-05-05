@@ -15,6 +15,8 @@ dbLoadRecords("$(MOTOR)/db/motorUtil.db", "P=newFocus:")
 
 ##
 < PMNC87xx.cmd
+##
+< newfocus8742.cmd
 
 iocInit
 
