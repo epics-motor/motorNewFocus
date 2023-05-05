@@ -1,0 +1,8 @@
+file "$(MOTOR)/db/asyn_motor.db"
+{
+pattern
+{M,	DTYP,		ADDR,	DESC,	EGU,	DIR,	VELO,	VBAS,	ACCL,	BDST,	BVEL,	BACC,	MRES,	PREC,	DHLM,	DLLM,	INIT}
+{"m1",	"asynMotor",	1,	"m1",	counts,	Pos,	100,	25,	1,	0,	0,	50,	1,	0,	0,	0,	""}
+{"m2",	"asynMotor",	2,	"m2",	counts,	Pos,	100,	25,	1,	0,	0,	50,	1,	0,	0,	0,	""}
+{"m3",	"asynMotor",	3,	"m3",	counts,	Pos,	100,	25,	1,	0,	0,	50,	1,	0,	0,	0,	""}
+}
