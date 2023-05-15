@@ -1,5 +1,13 @@
 # motorNewFocus Releases
 
+## __R1-2-1 (2023-05-15)__
+R1-2-1 is a release based on the master branch.
+
+### Changes since R1-2
+
+#### Bug fixes
+* Pull request [#11](https://github.com/epics-motor/motorNewFocus/pull/11): Fix for 'make uninstall' removing iocsh files
+
 ## __R1-2 (2023-05-05)__
 R1-2 is a release based on the master branch.
 
