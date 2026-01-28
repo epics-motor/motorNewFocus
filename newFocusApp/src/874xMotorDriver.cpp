@@ -228,7 +228,15 @@ nf874xAxis::nf874xAxis(nf874xController *pC, int axisNo)
   : asynMotorAxis(pC, axisNo),
     pC_(pC)
 {
-  sprintf(axisName_, "%d", axisNo);
+  // For daisy-chained controllers, assuming k axes per controller, and controllers number (1, 2, ...)
+  // 8742 has 4 axes per controller; 8743 with closed-loop support only has 2.
+  // Note that axis 1>3 addresses the same motor as bare 3, but response strings will be prefixed with 1>.
+  int axesPerController = pC_->hasClosedLoopSupport_ ? 2 : 4;
+  if (axisNo > axesPerController) {
+      sprintf(axisName_, "%d>%d", (axisNo - 1)/axesPerController + 1, (axisNo - 1)%axesPerController + 1);
+  } else {
+      sprintf(axisName_, "%d", axisNo);
+  }
   
   if(pC->hasClosedLoopSupport_) {
     // Retrieve limit switch statuses
@@ -236,7 +244,8 @@ nf874xAxis::nf874xAxis(nf874xController *pC, int axisNo)
     //   disable travel limit checking (e.g. 8410 rotary picomotor)
     sprintf(pC_->outString_, "PH?");
     pC_->writeReadController();
-    int motorType_ = atoi(pC_->inString_);
+    int offset = strlen(axisName_) - 1;
+    int motorType_ = atoi(pC_->inString_ + offset);
     limitChecking_ = (motorType_ & (0x3 << 3 * (axisNo - 1))) != (0x3 << 3 * (axisNo - 1));
 
     setIntegerParam(pC->motorStatusGainSupport_, 1); // Closed-loop positioning supported
@@ -453,11 +462,17 @@ asynStatus nf874xAxis::poll(bool *moving)
   int done;
   asynStatus comStatus;
 
+  // Returned poll values will include the controller id in the response if it was
+  // supplied as part of the axis name. Skip past the '>' before interpreting the result.
+  // Because both 8742 and 8743 have fewer than 10 axes, the position of the '>' if any
+  // will be one less than the length of the axis name.
+  int offset = strlen(axisName_) - 1;
+
   // Read the current encoder position
   sprintf(pC_->outString_, "%s TP?", axisName_);
   comStatus = pC_->writeReadController();
   if (comStatus) goto skip;
-  encoderPosition_ = atof(pC_->inString_);
+  encoderPosition_ = atof(pC_->inString_ + offset);
   setDoubleParam(pC_->motorEncoderPosition_,encoderPosition_);
 
   // Read the current theoretical position
@@ -470,7 +485,8 @@ asynStatus nf874xAxis::poll(bool *moving)
   sprintf(pC_->outString_, "%s MD?", axisName_);
   comStatus = pC_->writeReadController();
   if (comStatus) goto skip;
-  done = atoi(pC_->inString_);
+
+  done = atoi(pC_->inString_ + offset);
   setIntegerParam(pC_->motorStatusDone_, done);
   *moving = done ? false : true;
   setIntegerParam(pC_->motorStatusMoving_, *moving);
@@ -481,25 +497,25 @@ asynStatus nf874xAxis::poll(bool *moving)
   else
     setIntegerParam(pC_->motorStatusHome_, 0);
   
-  // Read closed-loop and limit switch statuses if supported
+  // Read closed-loop and limit switch statuses (8743 controllers only).
   if(pC_->hasClosedLoopSupport_) {
     int clen;
     sprintf(pC_->outString_, "%s MM?", axisName_);
     comStatus = pC_->writeReadController();
     if (comStatus) goto skip;
-    clen = atoi(pC_->inString_);
+    clen = atoi(pC_->inString_ + offset);
     setIntegerParam(pC_->motorStatusPowerOn_, clen);
     
     sprintf(pC_->outString_, "%s SR?", axisName_);
     comStatus = pC_->writeReadController();
     if(comStatus) goto skip;
-    highLimit_ = atof(pC_->inString_);
+    highLimit_ = atof(pC_->inString_ + offset);
     setDoubleParam(pC_->motorHighLimit_, highLimit_);
 
     sprintf(pC_->outString_, "%s SL?", axisName_);
     comStatus = pC_->writeReadController();
     if(comStatus) goto skip;
-    lowLimit_ = atof(pC_->inString_);
+    lowLimit_ = atof(pC_->inString_ + offset);
     setDoubleParam(pC_->motorLowLimit_, lowLimit_);
 
     // Hard limit switch status checking
@@ -512,7 +528,7 @@ asynStatus nf874xAxis::poll(bool *moving)
     sprintf(pC_->outString_, "PH?");
     comStatus = pC_->writeReadController();
     if(comStatus) goto skip;
-    lmst = atoi(pC_->inString_);
+    lmst = atoi(pC_->inString_ + offset);
     bool bit_;
     for(int i = 0; i < 3; i++) {
       bit_ = lmst & ( 0x1 << (i + 3 * (axisNo_ - 1)));
