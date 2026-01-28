@@ -1,5 +1,22 @@
 # motorNewFocus Releases
 
+## __R1-3 (2026-01-28)__
+R1-3 is a release based on the master branch.
+
+### Changes since R1-2-1
+
+#### New features
+* Pull request [#13](https://github.com/epics-motor/motorNewFocus/pull/13): [Paul Kienzle](https://github.com/pkienzle) added support for daisy-chained controllers to the 874xMotorDriver.
+
+#### Modifications to existing features
+* None
+
+#### Bug fixes
+* None
+
+#### Continuous integration
+* Upgraded ci-scripts (v3.4.1)
+
 ## __R1-2-1 (2023-05-15)__
 R1-2-1 is a release based on the master branch.
 
