@@ -15,6 +15,7 @@ March 4, 2011
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <cmath>
 
 #include <iocsh.h>
 #include <epicsThread.h>
@@ -137,6 +138,34 @@ nf874xAxis* nf874xController::getAxis(int axisNo)
   return static_cast<nf874xAxis*>(asynMotorController::getAxis(axisNo));
 }
 
+/* Check for other axes moving */
+bool nf874xController::otherAxesMoving(int axisNo)
+{
+  int othersMoving = false;
+  int axisDone;
+  int controllerIdx;
+  int axis;
+  
+  // Determine which controller the axis is on
+  controllerIdx = static_cast<int>(std::floor((axisNo-1)/4));
+  
+  // Check if axes on that controller are moving
+  for (axis=(controllerIdx*4)+1; axis<=(controllerIdx+1)*4; axis++) {
+    if (axis == axisNo)
+    {
+        continue;
+    }
+    // Check if axis is moving
+    getIntegerParam(axisNo, motorStatusDone_, &axisDone);
+    if (axisDone == 0)
+    {
+        othersMoving = true;
+        break;
+    }
+  }
+  
+  return othersMoving;
+}
 
 /** Called when asyn clients call pasynInt32->write().
   * Extracts the function and axis number from pasynUser.
@@ -283,22 +312,32 @@ asynStatus nf874xAxis::move(double position, int relative, double minVelocity,
 {
   asynStatus status;
   double targetPosition_;
+  bool othersMoving;
   
-  sprintf(pC_->outString_, "%s AC %f", axisName_, acceleration);
-  status = pC_->writeController();
-  sprintf(pC_->outString_, "%s VA %f", axisName_, maxVelocity);
-  status = pC_->writeController();
-
-  if (relative) {
-    sprintf(pC_->outString_, "%s PR %f", axisName_, position);
-    targetPosition_ = encoderPosition_ + position;
-  } else {
-    sprintf(pC_->outString_, "%s PA %f", axisName_, position);
-    targetPosition_ = position;
+  othersMoving = pC_->otherAxesMoving(axisNo_);
+  
+  if (othersMoving)
+  {
+    status = asynError;
   }
-  
-  status = pC_->writeController();
-  lastDirection_ = targetPosition_ > encoderPosition_;
+  else
+  {
+    sprintf(pC_->outString_, "%s AC %f", axisName_, acceleration);
+    status = pC_->writeController();
+    sprintf(pC_->outString_, "%s VA %f", axisName_, maxVelocity);
+    status = pC_->writeController();
+    
+    if (relative) {
+      sprintf(pC_->outString_, "%s PR %f", axisName_, position);
+      targetPosition_ = encoderPosition_ + position;
+    } else {
+      sprintf(pC_->outString_, "%s PA %f", axisName_, position);
+      targetPosition_ = position;
+    }
+    
+    status = pC_->writeController();
+    lastDirection_ = targetPosition_ > encoderPosition_;
+  }
   return status;
 }
 
@@ -312,19 +351,29 @@ asynStatus nf874xAxis::move(double position, int relative, double minVelocity,
 asynStatus nf874xAxis::home(double minVelocity, double maxVelocity, double acceleration, int forwards)
 {
   asynStatus status;
+  bool othersMoving;
   
-  sprintf(pC_->outString_, "%s AC %f", axisName_, acceleration);
-  status = pC_->writeController();
-  sprintf(pC_->outString_, "%s VA %f", axisName_, maxVelocity);
-  status = pC_->writeController();
-
-  if(limitChecking_)
-    sprintf(pC_->outString_, "%s MT %s", axisName_, forwards ? "+" : "-");
+  othersMoving = pC_->otherAxesMoving(axisNo_);
+  
+  if (othersMoving)
+  {
+    status = asynError;
+  }
   else
-    sprintf(pC_->outString_, "%s MZ %s", axisName_, forwards ? "+" : "-");
-
-  status = pC_->writeController();
-  lastDirection_ = forwards;
+  {
+    sprintf(pC_->outString_, "%s AC %f", axisName_, acceleration);
+    status = pC_->writeController();
+    sprintf(pC_->outString_, "%s VA %f", axisName_, maxVelocity);
+    status = pC_->writeController();
+    
+    if(limitChecking_)
+      sprintf(pC_->outString_, "%s MT %s", axisName_, forwards ? "+" : "-");
+    else
+      sprintf(pC_->outString_, "%s MZ %s", axisName_, forwards ? "+" : "-");
+    
+    status = pC_->writeController();
+    lastDirection_ = forwards;
+  }
   return status;
 }
 
@@ -337,18 +386,28 @@ asynStatus nf874xAxis::moveVelocity(double minVelocity, double maxVelocity, doub
   asynStatus status;
   double speed=maxVelocity;
   int forwards=1;
-
-  if (speed < 0) {
-    speed = -speed;
-    forwards = 0;
+  bool othersMoving;
+  
+  othersMoving = pC_->otherAxesMoving(axisNo_);
+  
+  if (othersMoving)
+  {
+    status = asynError;
   }
-  sprintf(pC_->outString_, "%s AC %f", axisName_, acceleration);
-  status = pC_->writeController();
-  sprintf(pC_->outString_, "%s VA %f", axisName_, speed);
-  status = pC_->writeController();
-  sprintf(pC_->outString_, "%s MV %s", axisName_, forwards ? "+" : "-");
-  status = pC_->writeController();
-  lastDirection_ = forwards;
+  else
+  {
+    if (speed < 0) {
+      speed = -speed;
+      forwards = 0;
+    }
+    sprintf(pC_->outString_, "%s AC %f", axisName_, acceleration);
+    status = pC_->writeController();
+    sprintf(pC_->outString_, "%s VA %f", axisName_, speed);
+    status = pC_->writeController();
+    sprintf(pC_->outString_, "%s MV %s", axisName_, forwards ? "+" : "-");
+    status = pC_->writeController();
+    lastDirection_ = forwards;
+  }
   return status;
 }
 

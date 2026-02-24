@@ -69,7 +69,8 @@ public:
   void report(FILE *fp, int level);
   nf874xAxis* getAxis(asynUser *pasynUser);
   nf874xAxis* getAxis(int axisNo);
-  
+  bool otherAxesMoving(int axisNo);
+
 protected:
   char modelName_[10];        /**< Model name of controller, for default open/closed-loop control config */
 
