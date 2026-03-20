@@ -461,6 +461,7 @@ asynStatus nf874xAxis::poll(bool *moving)
 { 
   int done;
   asynStatus comStatus;
+  static const char *functionName = "poll";
 
   // Returned poll values will include the controller id in the response if it was
   // supplied as part of the axis name. Skip past the '>' before interpreting the result.
@@ -545,6 +546,13 @@ asynStatus nf874xAxis::poll(bool *moving)
   }
 
   skip:
+  
+  if (comStatus) {
+    asynPrint(pasynUser_, ASYN_TRACE_ERROR, 
+        "%s:%s: error, comStatus=%d\n", 
+        driverName, functionName, comStatus);
+  }
+  
   setIntegerParam(pC_->motorStatusProblem_, comStatus ? 1 : 0);
   callParamCallbacks();
   return comStatus ? asynError : asynSuccess;
