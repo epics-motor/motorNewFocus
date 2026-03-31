@@ -18,7 +18,7 @@ asynSetTraceIOMask("$(PORT)_ETH",-1,0x1)
 #     (4) Moving poll period (ms)
 #     (5) Idle poll period (ms)
 #     (6) Write-only delay (ms)
-nf874xCreateController("$(PORT)", "$(PORT)_ETH", 3, 200, 1000, 100)
+nf874xCreateController("$(PORT)", "$(PORT)_ETH", 3, 200, 1000, 10)
 
 ## Load record instances
 dbLoadTemplate("newfocus8742.substitutions", "P=$(PREFIX),PORT=$(PORT)")
