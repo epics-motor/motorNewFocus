@@ -5,6 +5,11 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
+# EPICS base sorts libraries, which prevents motorAcsMotion from overriding
+# motor/modules/motorAcsMotion.  The following lines fix this, in theory.
+#!PROD_DEPLIB_DIRS = $(foreach word, $(INSTALL_LIB)/ \
+#!    $(dir $($*_DEPLIBS) $(PROD_DEPLIBS)), $(abspath $(word)))
+
 # The following are used for debugging messages.
 #!USR_CXXFLAGS += -DDEBUG
 
