@@ -39,7 +39,7 @@ static const char *driverName = "nf874xMotorDriver";
   * \param[in] idlePollPeriod    The time between polls when no axis is moving 
   */
 nf874xController::nf874xController(const char *portName, const char *nf874xPortName, int numAxes, 
-                             double movingPollPeriod, double idlePollPeriod)
+                             double movingPollPeriod, double idlePollPeriod, double writeOnlyDelay)
   //:  asynMotorController(portName, numAxes, NUM_nf874x_PARAMS, 
   :  asynMotorController(portName, numAxes+1, NUM_nf874x_PARAMS,
                          asynUInt32DigitalMask, 
@@ -51,7 +51,12 @@ nf874xController::nf874xController(const char *portName, const char *nf874xPortN
   int axis;
   asynStatus status;
   static const char *functionName = "nf874xController";
-
+  
+  writeOnlyDelay_ = writeOnlyDelay;
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, 
+      "%s:%s: nf874x write-only delay (ms): %lf\n",
+      driverName, functionName, writeOnlyDelay_);
+  
   /* Connect to nf874x controller */
   status = pasynOctetSyncIO->connect(nf874xPortName, 0, &pasynUserController_, NULL);
   if (status) {
@@ -97,11 +102,12 @@ nf874xController::nf874xController(const char *portName, const char *nf874xPortN
   * \param[in] numAxes           The number of axes that this controller supports.
   * \param[in] movingPollPeriod  The time in ms between polls when any axis is moving
   * \param[in] idlePollPeriod    The time in ms between polls when no axis is moving 
+  * \param[in] writeOnlyDelay    The time in ms to sleep before sending a write-only command 
   */
 extern "C" int nf874xCreateController(const char *portName, const char *nf874xPortName, int numAxes, 
-                                   int movingPollPeriod, int idlePollPeriod)
+                                   int movingPollPeriod, int idlePollPeriod, int writeOnlyDelay)
 {
-  new nf874xController(portName, nf874xPortName, numAxes, movingPollPeriod/1000., idlePollPeriod/1000.);
+  new nf874xController(portName, nf874xPortName, numAxes, movingPollPeriod/1000., idlePollPeriod/1000., writeOnlyDelay/1000.);
   return(asynSuccess);
 }
 
@@ -137,6 +143,12 @@ nf874xAxis* nf874xController::getAxis(int axisNo)
   return static_cast<nf874xAxis*>(asynMotorController::getAxis(axisNo));
 }
 
+/** Writes a string to the controller after a delay */ 
+asynStatus nf874xController::writeController()
+{
+  epicsThreadSleep(writeOnlyDelay_);
+  return asynMotorController::writeController();
+}
 
 /** Called when asyn clients call pasynInt32->write().
   * Extracts the function and axis number from pasynUser.
@@ -461,6 +473,7 @@ asynStatus nf874xAxis::poll(bool *moving)
 { 
   int done;
   asynStatus comStatus;
+  static const char *functionName = "poll";
 
   // Returned poll values will include the controller id in the response if it was
   // supplied as part of the axis name. Skip past the '>' before interpreting the result.
@@ -545,6 +558,13 @@ asynStatus nf874xAxis::poll(bool *moving)
   }
 
   skip:
+  
+  if (comStatus) {
+    asynPrint(pasynUser_, ASYN_TRACE_ERROR, 
+        "%s:%s: error, comStatus=%d\n", 
+        driverName, functionName, comStatus);
+  }
+  
   setIntegerParam(pC_->motorStatusProblem_, comStatus ? 1 : 0);
   callParamCallbacks();
   return comStatus ? asynError : asynSuccess;
@@ -598,15 +618,17 @@ static const iocshArg nf874xCreateControllerArg1 = {"nf874x port name", iocshArg
 static const iocshArg nf874xCreateControllerArg2 = {"Number of axes", iocshArgInt};
 static const iocshArg nf874xCreateControllerArg3 = {"Moving poll period (ms)", iocshArgInt};
 static const iocshArg nf874xCreateControllerArg4 = {"Idle poll period (ms)", iocshArgInt};
+static const iocshArg nf874xCreateControllerArg5 = {"Write-only delay (ms)", iocshArgInt};
 static const iocshArg * const nf874xCreateControllerArgs[] = {&nf874xCreateControllerArg0,
                                                            &nf874xCreateControllerArg1,
                                                            &nf874xCreateControllerArg2,
                                                            &nf874xCreateControllerArg3,
-                                                           &nf874xCreateControllerArg4};
-static const iocshFuncDef nf874xCreateControllerDef = {"nf874xCreateController", 5, nf874xCreateControllerArgs};
+                                                           &nf874xCreateControllerArg4,
+                                                           &nf874xCreateControllerArg5};
+static const iocshFuncDef nf874xCreateControllerDef = {"nf874xCreateController", 6, nf874xCreateControllerArgs};
 static void nf874xCreateControllerCallFunc(const iocshArgBuf *args)
 {
-  nf874xCreateController(args[0].sval, args[1].sval, args[2].ival, args[3].ival, args[4].ival);
+  nf874xCreateController(args[0].sval, args[1].sval, args[2].ival, args[3].ival, args[4].ival, args[5].ival);
 }
 
 static void nf874xMotorRegister(void)

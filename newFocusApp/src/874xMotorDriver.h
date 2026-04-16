@@ -61,11 +61,12 @@ friend class nf874xController;
 
 class epicsShareClass nf874xController : public asynMotorController {
 public:
-  nf874xController(const char *portName, const char *nf874xPortName, int numAxes, double movingPollPeriod, double idlePollPeriod);
+  nf874xController(const char *portName, const char *nf874xPortName, int numAxes, double movingPollPeriod, double idlePollPeriod, double writeOnlyDelay);
 
   /* These are the methods that we override from asynMotorDriver */
   asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
   asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
+  asynStatus writeController();
   void report(FILE *fp, int level);
   nf874xAxis* getAxis(asynUser *pasynUser);
   nf874xAxis* getAxis(int axisNo);
@@ -77,6 +78,8 @@ protected:
   int motorUpdateInterval_;
   int motorDeadband_;
   int motorFollowingError_;
+  
+  double writeOnlyDelay_;
 
   int hasClosedLoopSupport_;  /**< Flag indicating if controller supports closed-loop functionality */
 
