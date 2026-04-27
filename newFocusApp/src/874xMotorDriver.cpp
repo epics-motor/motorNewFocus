@@ -244,7 +244,7 @@ nf874xAxis::nf874xAxis(nf874xController *pC, int axisNo)
   // 8742 has 4 axes per controller; 8743 with closed-loop support only has 2.
   // Note that axis 1>3 addresses the same motor as bare 3, but response strings will be prefixed with 1>.
   int axesPerController = pC_->hasClosedLoopSupport_ ? 2 : 4;
-  if (axisNo > axesPerController) {
+  if (pC_->numAxes_ > axesPerController) {
       sprintf(axisName_, "%d>%d", (axisNo - 1)/axesPerController + 1, (axisNo - 1)%axesPerController + 1);
   } else {
       sprintf(axisName_, "%d", axisNo);
